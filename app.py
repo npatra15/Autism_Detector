@@ -5,20 +5,27 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
 import pickle
+import os
 
 # Page configuration must be the first Streamlit command
 st.set_page_config(
     page_title="Autism Spectrum Disorder Detection",
     page_icon="🧩",
-    layout="wide"
+    layout="wide",
+    # Hide the sidebar menu by default
+    initial_sidebar_state="collapsed"
 )
 
 # Custom CSS to improve UI/UX (must come after set_page_config)
 st.markdown("""
 <style>
+    /* Hide Streamlit sidebar and its elements */
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    
     body {
         background-color: #ffc1cc;
-        
         background-position: 0 0, 10px 10px;
     }
     
@@ -198,23 +205,60 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Function to find files in various possible locations
+def find_file(filename, possible_paths):
+    for path in possible_paths:
+        full_path = os.path.join(path, filename)
+        if os.path.exists(full_path):
+            return full_path
+    return None
+
+# Possible paths where model and encoder files might be located
+possible_model_paths = [
+    '.',                             # Current directory
+    './notebooks',                   # notebooks subdirectory
+    './notebooks/models',            # models subdirectory in notebooks
+    'models',                        # models directory
+    '..'                             # Parent directory
+]
+
 # Load the trained model
 @st.cache_resource
 def load_model():
-    return joblib.load('notebooks/best_modelpkl')
+    # First, try to load with the original path
+    try:
+        return joblib.load('notebooks/models/best_model.pkl')
+    except:
+        # If that fails, search for the file
+        model_path = find_file('best_model.pkl', possible_model_paths)
+        if model_path:
+            return joblib.load(model_path)
+        else:
+            raise FileNotFoundError("Could not find best_model.pkl")
 
 @st.cache_resource
 def load_encoders():
-    with open("notebooks/encoders.pkl", "rb") as f:
-        return pickle.load(f)
+    try:
+        with open("notebooks/models/encoders.pkl", "rb") as f:
+            return pickle.load(f)
+    except:
+        # If that fails, search for the file
+        encoders_path = find_file('encoders.pkl', possible_model_paths)
+        if encoders_path:
+            with open(encoders_path, "rb") as f:
+                return pickle.load(f)
+        else:
+            raise FileNotFoundError("Could not find encoders.pkl")
 
+# Load model and encoders silently without debug display
 try:
     model = load_model()
     encoders = load_encoders()
     model_loaded = True
-except:
+except Exception as e:
     model_loaded = False
-    st.error("Model or encoders not found. Please train the model first by running the model_development.ipynb notebook.")
+    # Only display error in main area if needed
+    st.error(f"Model or encoders not found. Error: {str(e)}")
 
 # Main app title with enhanced styling
 st.markdown('<div class="main-title">Autism Spectrum Disorder Detection</div>', unsafe_allow_html=True)
@@ -230,7 +274,18 @@ with tab1:
         st.markdown("""
         <div class="warning-box">
             <h3>⚠️ Model Not Loaded</h3>
-            <p>Please train the model first by running the model_development.ipynb notebook.</p>
+            <p>Please check that the model files are in the correct location. The app is looking for:</p>
+            <ul>
+                <li>best_model.pkl</li>
+                <li>encoders.pkl</li>
+            </ul>
+            <p>Make sure these files exist in one of the following directories:</p>
+            <ul>
+                <li>./notebooks/models/</li>
+                <li>./notebooks/</li>
+                <li>./models/</li>
+                <li>./</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -452,3 +507,9 @@ with tab2:
     
     st.markdown('</div>', unsafe_allow_html=True)
 
+# Add a footer
+st.markdown("""
+<div class="footer">
+    <p>© 2025 Autism Spectrum Disorder Detection Tool</p>
+</div>
+""", unsafe_allow_html=True)
