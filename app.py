@@ -16,19 +16,29 @@ st.set_page_config(
 # Custom CSS to improve UI/UX (must come after set_page_config)
 st.markdown("""
 <style>
+    body {
+        background-color: #ffc1cc;
+        
+        background-position: 0 0, 10px 10px;
+    }
+    
     .main-title {
-        font-size: 2.5rem;
+        font-size: 3.5rem;
+        font-weight: bold
+        font-family: Times New Roman
         color: #4B6587;
         margin-bottom: 1rem;
         text-align: center;
         padding: 1rem;
         border-bottom: 2px solid #F7F6F2;
     }
+    
     .subtitle {
-        font-size: 1.8rem;
+        font-size: 2.5rem;
         color: #4B6587;
         margin-top: 1rem;
     }
+    
     .section-header {
         font-size: 1.4rem;
         color: #4A6587;
@@ -36,38 +46,48 @@ st.markdown("""
         padding-bottom: 0.5rem;
         border-bottom: 1px solid #F7F6F2;
     }
+    
     .question-text {
         font-weight: 500;
         color: #2F2E41;
     }
+    
     .info-box {
         background-color: #F7F9FC;
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 5px solid #4B6587;
         margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    
     .warning-box {
         background-color: #FFF4E6;
         padding: 1rem;
         border-radius: 0.5rem;
         border-left: 5px solid #FF9F1C;
         margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    
     .result-positive {
         background-color: #FFE8E8;
         padding: 1.5rem;
         border-radius: 0.5rem;
         text-align: center;
         border: 1px solid #FFCAD4;
+        box-shadow: 0 2px 8px rgba(255,202,212,0.3);
     }
+    
     .result-negative {
         background-color: #E3F8E9;
         padding: 1.5rem;
         border-radius: 0.5rem;
         text-align: center;
         border: 1px solid #C1E7C5;
+        box-shadow: 0 2px 8px rgba(193,231,197,0.3);
     }
+    
     .footer {
         text-align: center;
         color: #888888;
@@ -76,21 +96,104 @@ st.markdown("""
         padding-top: 1rem;
         border-top: 1px solid #F7F6F2;
     }
+    
     .stButton > button {
         background-color: #4B6587;
         color: white;
         font-weight: 500;
         padding: 0.5rem 2rem;
         border-radius: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
     }
+    
     .stButton > button:hover {
         background-color: #39516a;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
     }
+    
     .st-eb {
         border-radius: 0.5rem;
     }
+    
     div[data-testid="stExpander"] details summary p {
         font-weight: 600;
+    }
+    
+    /* Custom card for horizontal navigation instead of sidebar */
+    .horizontal-nav {
+        background-color: white;
+        padding: 1.2rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 4px solid #4B6587;
+    }
+    
+    .horizontal-nav-item {
+        text-align: center;
+        padding: 0.5rem 1rem;
+        margin: 0.3rem;
+        border-radius: 0.3rem;
+        background-color: #f1f3f8;
+        transition: all 0.2s ease;
+    }
+    
+    .horizontal-nav-item:hover {
+        background-color: #e1e5f0;
+        transform: translateY(-2px);
+    }
+    
+    .horizontal-nav-icon {
+        margin-bottom: 0.3rem;
+    }
+    
+    /* Improved visualization for the probability bar */
+    .probability-container {
+        width: 100%;
+        height: 2.5rem;
+        background: linear-gradient(to right, #5de88f, #f6e683, #ff8a8a);
+        border-radius: 1rem;
+        position: relative;
+        margin: 1.5rem 0;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .probability-marker {
+        position: absolute;
+        height: 100%;
+        width: 4px;
+        background-color: white;
+        border: 2px solid #333;
+        border-radius: 4px;
+        transform: translateX(-50%);
+    }
+    
+    .probability-label {
+        position: absolute;
+        top: -25px;
+        transform: translateX(-50%);
+        background-color: white;
+        border-radius: 0.3rem;
+        padding: 0.2rem 0.5rem;
+        font-weight: bold;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    
+    /* App container with subtle shadow and border */
+    .app-container {
+        background-color: white;
+        border-radius: 0.8rem;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #eaecef;
+        margin-bottom: 1.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -98,11 +201,11 @@ st.markdown("""
 # Load the trained model
 @st.cache_resource
 def load_model():
-    return joblib.load('C:/Users/KIIT/Desktop/Autism_Detector/notebooks/best_modelpkl')
+    return joblib.load('notebooks/best_modelpkl')
 
 @st.cache_resource
 def load_encoders():
-    with open("C:/Users/KIIT/Desktop/Autism_Detector/notebooks/encoders.pkl", "rb") as f:
+    with open("notebooks/encoders.pkl", "rb") as f:
         return pickle.load(f)
 
 try:
@@ -116,18 +219,11 @@ except:
 # Main app title with enhanced styling
 st.markdown('<div class="main-title">Autism Spectrum Disorder Detection</div>', unsafe_allow_html=True)
 
-st.markdown("""
-<div class="info-box">
-This application uses machine learning to assess the likelihood of Autism Spectrum Disorder (ASD) 
-based on behavioral and demographic inputs. Please note that this is not a medical diagnosis, 
-and you should consult with healthcare professionals for proper evaluation.
-</div>
-""", unsafe_allow_html=True)
-
 # Create tabs with improved styling
 tab1, tab2 = st.tabs(["📋 Detection Tool", "ℹ️ About ASD"])
 
 with tab1:
+    #st.markdown('<div class="app-container">', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">Autism Detection Tool</div>', unsafe_allow_html=True)
 
     if not model_loaded:
@@ -191,7 +287,7 @@ with tab1:
 
         with col3:
             gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-            age = st.number_input("Age", min_value=1, max_value=100, value=30)
+            age = st.number_input("Age", min_value=1, max_value=100)
             jundice = st.selectbox("Born with jaundice?", ["Yes", "No"])
             autism = st.selectbox("Family history of autism?", ["Yes", "No"])
 
@@ -259,34 +355,17 @@ with tab1:
                         """.format((1-probability)*100), unsafe_allow_html=True)
 
                 with result_col2:
-                    # Create more appealing visualization
-                    fig, ax = plt.subplots(figsize=(8, 2))
-                    plt.xlim(0, 1)
-                    plt.ylim(0, 1)
-                    plt.axis('off')
-                    
-                    # Background gradient
-                    cmap = plt.cm.RdYlGn_r
-                    gradient = np.linspace(0, 1, 100).reshape(1, -1)
-                    ax.imshow(gradient, aspect='auto', cmap=cmap, extent=[0, 1, 0.25, 0.75])
-                    
-                    # Add threshold line
-                    ax.axvline(x=0.5, color='white', linestyle='-', linewidth=2, alpha=0.8)
-                    
-                    # Add marker for current probability
-                    ax.scatter(probability, 0.5, color='white', s=300, zorder=5, 
-                              edgecolor='black', linewidth=2)
-                    
-                    # Add probability text
-                    ax.text(probability, 0.5, f"{probability*100:.1f}%", 
-                            ha='center', va='center', fontsize=12, fontweight='bold',
-                            bbox=dict(boxstyle="round,pad=0.3", fc='white', ec="gray", alpha=0.8))
-                    
-                    # Add labels
-                    ax.text(0.1, 0.9, "Low probability", fontsize=10, ha='center')
-                    ax.text(0.9, 0.9, "High probability", fontsize=10, ha='center')
-                    
-                    st.pyplot(fig)
+                    # Improved visualization instead of matplotlib
+                    st.markdown(f"""
+                    <div class="probability-container">
+                        <div class="probability-marker" style="left: {probability*100}%;"></div>
+                        <div class="probability-label" style="left: {probability*100}%;">{probability*100:.1f}%</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                        <div>Low probability</div>
+                        <div>High probability</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
                 st.markdown("""
                 <div class="warning-box">
@@ -299,8 +378,11 @@ with tab1:
             except Exception as e:
                 st.error(f"Error making prediction: {e}")
                 st.info("Ensure all inputs match the expected format and the model is properly trained.")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with tab2:
+    #st.markdown('<div class="app-container">', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">About Autism Spectrum Disorder</div>', unsafe_allow_html=True)
     
     # Create tabs within the About section
@@ -340,18 +422,6 @@ with tab2:
                 <li>Troubles with developing and maintaining relationships</li>
             </ul>
             """, unsafe_allow_html=True)
-            
-        with col_signs2:
-            st.markdown("""
-            <h3>Behavioral Signs</h3>
-            <ul>
-                <li>Repetitive movements or speech</li>
-                <li>Inflexible adherence to routines</li>
-                <li>Highly restricted interests</li>
-                <li>Hyper- or hypo-reactivity to sensory input</li>
-                <li>Strong attachment to objects</li>
-            </ul>
-            """, unsafe_allow_html=True)
     
     with about_tab3:
         st.markdown("""
@@ -379,34 +449,6 @@ with tab2:
             <li><a href="https://www.cdc.gov/ncbddd/autism/" target="_blank">CDC Autism Information</a></li>
         </ul>
         """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Add a sidebar with additional information
-with st.sidebar:
-    st.image("https://img.icons8.com/cute-clipart/64/autism.png", width=80)
-    st.markdown("### About This Tool")
-    st.write("""
-    This screening tool uses machine learning to identify potential indicators of Autism Spectrum Disorder.
-    
-    It is based on common behavioral traits and demographic factors associated with ASD.
-    """)
-    
-    st.markdown("### How It Works")
-    st.write("""
-    1. Answer 10 behavioral questions
-    2. Provide demographic information
-    3. Submit for analysis
-    4. Review your results
-    """)
-    
-    st.markdown("### Important Note")
-    st.write("""
-    This is a screening tool only and not a diagnostic instrument. Results should be discussed with healthcare professionals.
-    """)
-
-# Add a footer
-st.markdown("""
-<div class="footer">
-    <p>Autism Spectrum Disorder Detection Tool | For educational purposes only</p>
-    <p>This tool is not a substitute for professional medical advice or diagnosis</p>
-</div>
-""", unsafe_allow_html=True)
